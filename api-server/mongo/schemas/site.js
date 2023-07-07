@@ -15,6 +15,7 @@ export const siteSchema = new Schema({
   description: { type: String, required: false },
   create_date: { type: Date, required: true, default: Date.now },
   published: { type: Boolean, required: true, default: false },
+  password: { type: String, required: true },
 }); 
 
 export const Site = mongoose.model('Site', siteSchema);

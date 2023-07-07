@@ -55,7 +55,7 @@ const main = async () => {
   app.use('/sites', sitesRouter);
   app.use('/models', modelsRouter);
   app.use('/devices', deviceRouter);
-  app.use('/configs', config);
+  app.use('/config', config);
   app.use('/fetch', fetchRouter);
 
   // Capture events from fetchEmitter

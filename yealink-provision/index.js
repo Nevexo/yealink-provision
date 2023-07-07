@@ -5,6 +5,8 @@ import winston from 'winston';
 import aixos from 'axios';
 import express from 'express';
 import cors from 'cors';
+import https from 'https';
+import fs from 'fs';
 
 // Setup Winston logger
 const logger = winston.createLogger({
@@ -38,14 +40,16 @@ const axios = aixos.create({
   }
 });
 
-// Setup routes, handle "/cfg/[MAC ADDRESS].cfg" requests.
-app.get('/cfg/:mac', async (req, res) => {
+// Setup routes, handle "/cfg/[sitepw]/[MAC ADDRESS].cfg" requests.
+// This route uses site-based authentication with the site password in the URL.
+// This is supported in yealink-provision v1 due to the lack of support for device-based authentication.
+// This will be replaced by device authentication once it is supported in yealink-provision v2.
+app.get('/cfg/:sitepw/:mac', async (req, res) => {
   if (!req.params.mac.endsWith('.cfg')) {
     logger.debug("Received request for non-cfg file.")
     res.sendStatus(404);
     return;
   }
-
   const mac = req.params.mac.replace('.cfg', '');
   
   if (mac.length != 12) {
@@ -63,13 +67,14 @@ app.get('/cfg/:mac', async (req, res) => {
 
   logger.debug(`Received request for ${mac}.cfg`);
 
+  logger.debug(`Site password: ${req.params.sitepw}`);
 
   // Fetch device from API server
   let data;
   await axios.get(`/fetch/device/${mac}`, {
     params: {
-      username: "cy0eNKDl",
-      password: "vgCwAfz29_eji3iyNNP8Oy9Z_ZULd7HA"
+      authentication_mode: 'site_pw',
+      password: req.params.sitepw
     }
   }).then((response) => {
     data = response.data;
@@ -114,4 +119,12 @@ app.get('/cfg/:mac', async (req, res) => {
 // Start Express
 app.listen(process.env.PORT || 8080, () => {
   logger.info(`Yealink Provisioning Agent listening on port ${process.env.PORT || 8080}`);
+});
+
+// Start HTTPS server
+https.createServer({
+  key: fs.readFileSync('server.key'),
+  cert: fs.readFileSync('server.cert')
+}, app).listen(443, () => {
+  logger.info(`Yealink Provisioning Agent listening on port 443`);
 });

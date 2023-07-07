@@ -43,6 +43,9 @@ router.post('/', async (req, res) => {
   // Generate a new ID
   req.body.id = nanoid(4);
   
+  // Generate a password - TODO: this is a temporary measure until authentication is figured out with Yealink devices.
+  req.body.password = nanoid(16);
+
   // Create the new site
   const site = new Site(req.body);
   await site.save();
