@@ -1,10 +1,12 @@
 // yealink-provision - Config API
 // Cameron Fleming 2023
 
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import { Router } from 'express';
 import { EventEmitter } from 'events';
 
+// Setup nanoid
+const nanoid = customAlphabet('1234567890abcdef', 8);
 
 import { DeviceConfigElement, DeviceConfigGroup } from '../mongo/schemas/config.js';
 import { Device } from '../mongo/schemas/device.js';

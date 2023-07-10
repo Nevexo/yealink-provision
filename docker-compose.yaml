@@ -15,4 +15,24 @@ services:
       - 27017:27017
     environment:
       MONOGO_INITDB_DATABASE: yealink-provision
-      
+  
+  api:
+    build: ./api-server
+    restart: always
+    ports:
+      - 3000:3000
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/yealink-provision
+
+  yealink-agent:
+    build: ./yealink-provision
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - api
+    environment:
+      - API_SERVER_URL=http://api:3000
+      - PORT=8080

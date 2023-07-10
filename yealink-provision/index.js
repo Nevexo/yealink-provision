@@ -122,9 +122,9 @@ app.listen(process.env.PORT || 8080, () => {
 });
 
 // Start HTTPS server
-https.createServer({
-  key: fs.readFileSync('server.key'),
-  cert: fs.readFileSync('server.cert')
-}, app).listen(443, () => {
-  logger.info(`Yealink Provisioning Agent listening on port 443`);
-});
+// https.createServer({
+//   key: fs.readFileSync('server.key'),
+//   cert: fs.readFileSync('server.cert')
+// }, app).listen(443, () => {
+//   logger.info(`Yealink Provisioning Agent listening on port 443`);
+// });

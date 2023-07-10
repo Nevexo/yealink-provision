@@ -11,7 +11,6 @@ export const modelSchema = new Schema({
   id: { type: String, required: true },
   name: { type: String, required: true },
   description: { type: String, required: false },
-  yealink_default_config_id: { type: String, required: true }, // This is the name of the default config file that this device should expect.
   create_date: { type: Date, required: true, default: Date.now },
 });
 

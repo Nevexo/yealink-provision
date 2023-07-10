@@ -132,3 +132,4 @@ dist
 *.log
 
 old/*
+py-cli/groups/__pycache__

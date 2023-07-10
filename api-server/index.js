@@ -6,8 +6,11 @@ import mongoose from 'mongoose';
 import express from 'express';
 import cors from 'cors';
 import events from 'events';
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import { Server } from 'socket.io';
+
+// Setup nanoid
+const nanoid = customAlphabet('1234567890abcdef', 8);
 
 // Import express routers
 import sitesRouter from './routes/sites.js';

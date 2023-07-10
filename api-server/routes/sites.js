@@ -2,10 +2,13 @@
 
 import { Router } from 'express';
 import { Site } from '../mongo/schemas/site.js';
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import { logger } from '../index.js';
 
 import { Device } from '../mongo/schemas/device.js';
+
+// Setup nanoid
+const nanoid = customAlphabet('1234567890abcdef', 8);
 
 const router = Router();
 

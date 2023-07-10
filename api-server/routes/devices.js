@@ -3,7 +3,7 @@
 
 // These endpoints are used to manage Yealink Devices within yealink-provision.
 
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import { Router } from 'express';
 
 import { Device } from '../mongo/schemas/device.js';
@@ -11,6 +11,9 @@ import { Site } from '../mongo/schemas/site.js';
 import { Model } from '../mongo/schemas/model.js';
 
 import { logger } from '../index.js';
+
+// Setup nanoid
+const nanoid = customAlphabet('1234567890abcdef', 8);
 
 const router = Router();
 
