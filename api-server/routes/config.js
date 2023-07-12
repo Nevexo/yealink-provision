@@ -109,8 +109,8 @@ router.get('/group/:id', async (req, res) => {
   }
 
   // If it does, get the children, and return them in a children array.
-  const reoslved_groups = await get_groups(req.params.id);
-  res.json(reoslved_groups);
+  const resolved_groups = await get_groups(req.params.id);
+  res.json(resolved_groups[0]);
 });
 
 // Create a new configuration group, if parent_id is specified, ensure the group exists.

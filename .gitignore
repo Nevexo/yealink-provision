@@ -133,3 +133,4 @@ dist
 
 old/*
 py-cli/groups/__pycache__
+py-cmd-cli/yealinkprovision/__pycache__
