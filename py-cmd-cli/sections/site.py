@@ -122,7 +122,7 @@ class SiteEditCLI(cmd2.Cmd):
     if enable_site(self.site.id):
       print('Site Enabled Successfully')
     else:
-      print('Site Enable Failed'
+      print('Site Enable Failed')
 
   def do_config(self, arg):
     """Edit the site config"""
