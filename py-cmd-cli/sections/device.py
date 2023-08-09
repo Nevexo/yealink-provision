@@ -44,7 +44,8 @@ def create_device(site_id, name, mac, model_id, remark):
     'name': name,
     'mac_address': mac,
     'model_id': model_id,
-    'remark': remark
+    'remark': remark,
+    'enable': True
   })
 
   # Check if the request was successful
@@ -54,6 +55,16 @@ def create_device(site_id, name, mac, model_id, remark):
     print(r.text)
   
   return None
+
+def enable_device(site_id, id):
+  # Enable the device
+  r = requests.post(api_url + '/sites/' + site_id + '/devices/' + id + '/enable')
+
+  # Check if the request was successful
+  if r.status_code == 200:
+    return True
+  
+  return False
 
 def get_devices(site_id):
   # Get all sites
@@ -117,6 +128,13 @@ class DeviceEditCLI(cmd2.Cmd):
       print("Device deleted")
     else:
       print("Error: Failed to delete device")
+
+  def do_enable(self, args):
+    """Enable the device"""
+    if enable_device(self.site.id, self.device.id):
+      print("Device enabled")
+    else:
+      print("Error: Failed to enable device")
 
   def do_config(self, args):
     """Edit the device configuration"""
