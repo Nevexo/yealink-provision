@@ -1,5 +1,8 @@
 # yealink-provision
 
+## This project is in active development.
+Documentation will be improved in the coming weeks.
+
 This project creates a simple Yealink provisioning server that can be used with Yealink RPS to configure
 Yealink phones dynamically.
 
