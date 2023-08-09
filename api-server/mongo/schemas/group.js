@@ -18,7 +18,7 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 export const groupSchema = new Schema({
-  id: { type: String, required: true },
+  id: { type: String, required: true, unique: true, },
   name: { type: String, required: true },
   parent: { type: String, required: false },
   remark: { type: String, required: false },
