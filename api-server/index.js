@@ -16,11 +16,8 @@ const nanoid = customAlphabet('1234567890abcdef', 8);
 import sitesRouter from './routes/sites.js';
 import modelsRouter from './routes/models.js';
 import deviceRouter from './routes/devices.js';
-import {fetchRouter, fetchEmitter} from './routes/fetch.js';
-import config from './routes/config.js';
-
-// Import schemas
-import { FetchAudit } from './mongo/schemas/fetch_audit.js';
+// import {fetchRouter, fetchEmitter} from './routes/fetch.js';
+import configRouter from './routes/config.js';
 
 // Setup Winston logger
 const logger = winston.createLogger({
@@ -57,25 +54,25 @@ const main = async () => {
   // Setup routes
   app.use('/sites', sitesRouter);
   app.use('/models', modelsRouter);
-  app.use('/devices', deviceRouter);
-  app.use('/config', config);
-  app.use('/fetch', fetchRouter);
+  app.use('/sites/:site/devices', deviceRouter);
+  app.use('/:target_type/:target_id/config', configRouter)
+  // app.use('/fetch', fetchRouter);
 
   // Capture events from fetchEmitter
-  fetchEmitter.on('audit_device_fetch', async (device, result) => {
-    logger.info("Device fetch audit event: " + device.mac_address);
-    await io.emit('audit_device_fetch', device.mac_address);
+  // fetchEmitter.on('audit_device_fetch', async (device, result) => {
+  //   logger.info("Device fetch audit event: " + device.mac_address);
+  //   await io.emit('audit_device_fetch', device.mac_address);
 
-    // Add new audit log entry.
-    await FetchAudit.create({
-      id: nanoid(8),
-      type: "device_specific",
-      device_id: device.id,
-      success: result.result == 'success',
-      state_string: result.reason || "N/A",
-      remark: result.message || "N/A",
-    });
-  });
+  //   // Add new audit log entry.
+  //   await FetchAudit.create({
+  //     id: nanoid(8),
+  //     type: "device_specific",
+  //     device_id: device.id,
+  //     success: result.result == 'success',
+  //     state_string: result.reason || "N/A",
+  //     remark: result.message || "N/A",
+  //   });
+  // });
 
   // Start Express
   app.listen(process.env.HTTP_PORT || 3000, () => {
