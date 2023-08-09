@@ -10,7 +10,7 @@ const { Schema } = mongoose;
 export const modelSchema = new Schema({
   id: { type: String, required: true },
   name: { type: String, required: true },
-  description: { type: String, required: false },
+  remark: { type: String, required: false },
   create_date: { type: Date, required: true, default: Date.now },
 });
 

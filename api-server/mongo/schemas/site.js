@@ -11,10 +11,9 @@ const { Schema } = mongoose;
 export const siteSchema = new Schema({
   id: { type: String, required: true },
   name: { type: String, required: true },
-  tenant_name: { type: String, required: true },
-  description: { type: String, required: false },
+  remark: { type: String, required: false },
   create_date: { type: Date, required: true, default: Date.now },
-  published: { type: Boolean, required: true, default: false },
+  enable: { type: Boolean, required: true, default: false },
   password: { type: String, required: true },
 }); 
 
