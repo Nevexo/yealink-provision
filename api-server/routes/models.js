@@ -13,7 +13,7 @@ import { logger } from '../index.js';
 // Setup nanoid
 const nanoid = customAlphabet('1234567890abcdef', 8);
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 // Get all models
 router.get('/', async (req, res) => {

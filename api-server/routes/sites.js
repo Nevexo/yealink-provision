@@ -6,11 +6,12 @@ import { customAlphabet } from 'nanoid';
 import { logger } from '../index.js';
 
 import { Device } from '../mongo/schemas/device.js';
+import { Group } from '../mongo/schemas/group.js';
 
 // Setup nanoid
 const nanoid = customAlphabet('1234567890abcdef', 8);
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 // Get all sites
 router.get('/', async (req, res) => {
@@ -161,7 +162,7 @@ router.delete('/:id', async (req, res) => {
   }
 
   // Check for any config groups targeting this site
-  const configGroups = await ConfigGroup.find({ target_type: "site", target_id: req.params.id });
+  const configGroups = await Group.find({ target_type: "site", target_id: req.params.id });
   if (configGroups.length > 0) {
     res.status(400).json({
       error: 'site_has_config_groups',
