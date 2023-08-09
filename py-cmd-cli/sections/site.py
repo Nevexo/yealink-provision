@@ -38,7 +38,7 @@ class Site:
   
 def create_site(name, remark):
   # Create the site
-  r = requests.post(api_url + '/sites', json={'name': name, 'remark': remark})
+  r = requests.post(api_url + '/sites', json={'name': name, 'remark': remark, 'enable': true})
 
   # Check if the request was successful
   if r.status_code == 200:
@@ -59,6 +59,16 @@ def get_sites():
     return sites
   
   return None
+
+def enable_site(id):
+  # Enable the site
+  r = requests.post(api_url + '/sites/' + id + "/enable")
+
+  # Check if the request was successful
+  if r.status_code == 200:
+    return True
+  
+  return False
 
 def get_site(id):
   # Get the site
@@ -106,6 +116,13 @@ class SiteEditCLI(cmd2.Cmd):
     """List all devices in this site"""
     device = DeviceCLI(self.site)
     device.cmdloop()
+
+  def do_enable(self, arg):
+    """Enable the site"""
+    if enable_site(self.site.id):
+      print('Site Enabled Successfully')
+    else:
+      print('Site Enable Failed'
 
   def do_config(self, arg):
     """Edit the site config"""
