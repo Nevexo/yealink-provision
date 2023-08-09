@@ -8,11 +8,12 @@ import cmd2
 import requests
 
 class Site:
-  def __init__(self, id, name, remark, create_date):
+  def __init__(self, id, name, remark, create_date, password):
     self.id = id
     self.name = name
     self.remark = remark
     self.create_date = create_date
+    self.password = password
 
   def rename(self, name):
     # Rename the site
@@ -41,7 +42,7 @@ def create_site(name, remark):
 
   # Check if the request was successful
   if r.status_code == 200:
-    return Site(r.json()['id'], name, remark, r.json()['create_date'])
+    return Site(r.json()['id'], name, remark, r.json()['create_date'], r.json()['password'])
   
   return None
 
@@ -54,7 +55,7 @@ def get_sites():
     sites = []
     for site in r.json():
       remark = site['remark'] if 'remark' in site else "N/A"
-      sites.append(Site(site['id'], site['name'], remark, site['create_date']))
+      sites.append(Site(site['id'], site['name'], remark, site['create_date']), site['password'])
     return sites
   
   return None
@@ -66,7 +67,7 @@ def get_site(id):
   # Check if the request was successful
   if r.status_code == 200:
     remark = r.json()['remark'] if 'remark' in r.json() else "N/A"
-    return Site(r.json()['id'], r.json()['name'], remark, r.json()['create_date'])
+    return Site(r.json()['id'], r.json()['name'], remark, r.json()['create_date'], r.json()['password'])
   
   return None
 
@@ -87,6 +88,10 @@ class SiteEditCLI(cmd2.Cmd):
       self.prompt = 'site(' + self.site.name + ')> '
     else:
       print('Site Rename Failed')
+
+  def do_password(self, args):
+    """View the Site password"""
+    print('Site Password: ' + self.site.password)
 
   def do_delete(self, arg):
     """Delete the site"""
