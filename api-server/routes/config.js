@@ -242,6 +242,7 @@ router.post('/*', async (req, res) => {
     } else {
       // No value specified, create a new group with the parent as the previous group in the path.
       logger.debug(`router: post*: creating new group from path above, name: ${path[path.length - 1]}, target_id: ${groups[groups.length - 1].id}`)
+
       const group = new Group({
         id: nanoid(8),
         target_type: 'group',
@@ -271,6 +272,12 @@ router.post('/*', async (req, res) => {
 
     // Create a new group
     logger.debug(`router: post*: creating new group from path above, this is a root group.`)
+
+    if (!['model', 'site', 'device'].includes(req.params.target_type)) {
+      logger.debug(`router: create_new_group: aborting, invalid target_type: ${req.params.target_type}.`)
+      return res.status(400).json({ message: "Invalid target_type." });
+    }
+
     const group = new Group({
       id: nanoid(8),
       target_type: req.params.target_type,

@@ -5,7 +5,8 @@
 // It splits the configuration elements into a hierarchy of configuratin in JSON.
 
 import { Router } from 'express';
-import { DeviceConfigElement, DeviceConfigGroup, get_elements_by_group } from '../mongo/schemas/config.js';
+import { Element } from '../mongo/schemas/config.js';
+import { Group } from '../mongo/schemas/group.js';
 import { Device } from '../mongo/schemas/device.js';
 import { Site } from '../mongo/schemas/site.js';
 import { Model } from '../mongo/schemas/model.js';
@@ -18,7 +19,50 @@ export const fetchEmitter = new EventEmitter();
 
 import { logger } from '../index.js';
 
-export const router = Router();
+export const router = Router({ mergeParams: true });
+
+const get_children_object = async (root_id) => {
+  // Get all children for the root_id, store them in a JSON object that
+  // that has parent.children = [{child}] etc.
+  // Include elements in the group as "elements"
+
+  let tree = {};
+
+  const child_groups = await Group.find({ target_type: "group", target_id: root_id });
+  const child_elements = await Element.find({ group_id: root_id });
+
+  // Add the elements to the tree
+  tree.elements = child_elements;
+  tree.children = [];
+
+  // Recursively add the children of the groups to the tree
+  for (const child_group of child_groups) {
+    tree['children'][child_group.name] = await get_children_object(child_group.id);
+  }
+
+  return tree;
+}
+
+const get_json_structure = async (group_element_tree) => {
+  // Recursively build a JSON structure from the group_element_tree. Only uses the group name/element name as the key.
+  // If an element has a value, it is stored as the value of the key.
+  // Each group should beocme a JSON object, each element should become a key/value pair. Some groups may be empty.
+
+  let json_structure = {};
+
+  // Add the elements to the json_structure
+  for (const element of group_element_tree.elements) {
+    json_structure[element.name] = element.value;
+  }
+
+  // Recursively add the children of the groups to the json_structure
+  const downstream_children = group_element_tree.children;
+  for (const [group_name, group_element_tree] of Object.entries(downstream_children)) {
+    json_structure[group_name] = await get_json_structure(group_element_tree);
+  }
+
+  return json_structure;
+}
 
 // Get a device by MAC address and password, if both match, return site, device, model and configuration.
 // Build the configuration by taking all global elements  and then all site elements and then all device elements, overwriting as needed.
@@ -32,7 +76,7 @@ router.get('/device/:mac', async (req, res) => {
   }
 
   req.params.mac = req.params.mac.toUpperCase();
-  logger.debug(`Fetching configuration for device ${req.params.mac} with authentication mode ${authentication_mode}`)
+  logger.debug(`fetch: fetching configuration for device ${req.params.mac} with authentication mode ${authentication_mode}`)
   const device = await Device.findOne({ mac_address: req.params.mac });
   if (!device) {
     logger.debug("Aborting, mac address not in database.")
@@ -43,17 +87,17 @@ router.get('/device/:mac', async (req, res) => {
     return;
   }
   
-  if (!device.published) {
-    logger.debug("Aborting, device not published.")
+  if (!device.enable) {
+    logger.debug("Aborting, device not enabled..")
     res.status(403).json({
       error: 'forbidden',
-      message: 'Device is not published',
+      message: 'Device is not enabled.',
     })
 
     fetchEmitter.emit('audit_device_fetch', device, {
       result: 'fail',
-      reason: 'device_not_published',
-      message: "Attempt to fetch configuration for unpublished device."
+      reason: 'device_not_enabled',
+      message: "Attempt to fetch configuration for disabled device."
     });
 
     return;
@@ -135,19 +179,19 @@ router.get('/device/:mac', async (req, res) => {
       return;
   }
 
-  logger.debug("Authentication successful, validating site")
+  logger.debug("fetch: Authentication successful, validating site")
 
-  if (!site.published) {
-    logger.debug("Aborting, site not published.")
+  if (!site.enable) {
+    logger.debug("Aborting, site not enabled.")
     res.status(403).json({
       error: 'forbidden',
-      message: 'Site is not published',
+      message: 'Site is not enabled',
     })
 
     fetchEmitter.emit('audit_device_fetch', device, {
       result: 'fail',
-      reason: 'site_not_published',
-      message: "Attempt to fetch configuration for device with unpublished site."
+      reason: 'site_not_enabled',
+      message: "Attempt to fetch configuration for device with disabled site."
     });
 
     return;
@@ -170,7 +214,7 @@ router.get('/device/:mac', async (req, res) => {
     return;
   }
 
-  logger.debug("Authentication successful, building configuration.")
+  logger.debug("fetch: Authentication successful, building configuration.")
 
   // Build a JSON schema of the configuration, for example: {"account": {"1": {"password": "test"}}}
   // This requires resolving all groups for the target_type, then finding all children, and finally all elements
@@ -178,72 +222,70 @@ router.get('/device/:mac', async (req, res) => {
   // Do this in the order of global, model, site, device.
   // Overwrite as we go.
 
-  let config = {};
+  // Fetch all parent configuration groups for all target_types that affect this device.
+  // This includes a target to the model_id, a target to the site_id and a target for the device itself.
+  // Apply these in order, overwriting as we go.
 
-  // Get all global groups
-  const global_groups = await DeviceConfigGroup.find({ target_type: "global" });
-  
-  // For every global group, use get_elements_by_group to resolve all elements,
-  // then merge the result into the config object.
-  for (const group of global_groups) {
-    const elements = await get_elements_by_group(group.id);
-    // combine the two config objects, merge with mergician
-    config = await mergician(config, elements)
+  // Get model configuration groups, their children and any elements assigned to them.
+  // This must be done recursively, as groups may have children, and children may have children.
+  // Elements can be assigned to any of the groups, and some groups may have elements and child groups.
+
+  let config_tree = {};
+
+  // Get all model configuration groups.
+  logger.debug(`fetch: config_builder: get model config groups for ${model.name} (${model.id})`)
+  const model_config_root_groups = await Group.find({ target_type: "model", target_id: model.id });
+
+  // Get elements and children for each root group.
+  let model_config_tree = {};
+  for (const model_config_root_group of model_config_root_groups) {
+    const root_children = await get_children_object(model_config_root_group.id);
+    
+    // Build configuration JSON structure from the root children.
+    model_config_tree[model_config_root_group.name] = await get_json_structure(root_children);
   }
 
-  // Get all model groups
-  const model_groups = await DeviceConfigGroup.find({ target_type: "model", target: model.id });
+  // Get site configuration groups, their children and any elements assigned to them.
+  logger.debug(`fetch: config_builder: get site config groups for ${site.name} (${site.id})`)
+  const site_config_root_groups = await Group.find({ target_type: "site", target_id: site.id });
 
-  // For every model group, use get_elements_by_group to resolve all elements.
-  for (const group of model_groups) {
-    const elements = await get_elements_by_group(group.id);
-    // combine the two config objects, merge with mergician
-    config = await mergician(config, elements)
+  let site_config_tree = {};
+  for (const site_config_root_group of site_config_root_groups) {
+    const root_children = await get_children_object(site_config_root_group.id);
+
+    // Build configuration JSON structure from the root children.
+    site_config_tree[site_config_root_group.name] = await get_json_structure(root_children);
   }
 
-  // Get all site groups
-  const site_groups = await DeviceConfigGroup.find({ target_type: "site", target: site.id });
+  // Get device configuration groups, their children and any elements assigned to them.
+  logger.debug(`fetch: config_builder: get device config groups for ${device.id} (${device.id})`)
+  const device_config_root_groups = await Group.find({ target_type: "device", target_id: device.id });
 
-  // For every site group, use get_elements_by_group to resolve all elements.
-  for (const group of site_groups) {
-    const elements = await get_elements_by_group(group.id);
-    // combine the two config objects, merge with mergician
-    config = await mergician(config, elements)
+  let device_config_tree = {};
+  for (const device_config_root_group of device_config_root_groups) {
+    const root_children = await get_children_object(device_config_root_group.id);
+
+    // Build configuration JSON structure from the root children.
+    device_config_tree[device_config_root_group.name] = await get_json_structure(root_children);
   }
 
-  // Get all device groups
-  const device_groups = await DeviceConfigGroup.find({ target_type: "device", target: device.id });
+  // Merge the three configuration trees together, overwriting as we go.
+  // This is done in the order of model, site, device.
 
-  // For every device group, use get_elements_by_group to resolve all elements.
-  for (const group of device_groups) {
-    const elements = await get_elements_by_group(group.id);
-    // combine the two config objects, merge with mergician
-    config = await mergician(config, elements)
-  }
+  // Merge model and site.
+  const model_site_config_tree = mergician(model_config_tree, site_config_tree);
 
-  // If the config object is empty, then there is no configuration for this device.
-  // This is likely due to unpublished entries.
+  // Merge model+site and device.
+  config_tree = mergician(model_site_config_tree, device_config_tree);
 
-  if (config == {}) {
-    res.status(404).json({
-      error: 'not_found',
-      message: 'No configuration was found for this device',
-    })
-
-    fetchEmitter.emit('audit_device_fetch', device, {
-      result: 'fail',
-      reason: 'no_configuration',
-      message: "Attempt to fetch configuration for device with no configuration, possibly due to unpublished entries."
-    });
-
-    return;
-  }
+  console.log("=============")
+  console.dir(config_tree);
 
   res.json({
     site: site,
     device: device,
     model: model,
-    config: config,
+    config: config_tree,
   })
 
   fetchEmitter.emit('audit_device_fetch', device, {
@@ -252,7 +294,7 @@ router.get('/device/:mac', async (req, res) => {
     message: "Successfully fetched configuration for device."
   });
 
-  logger.debug("Configuration sent successfully, done.")
+  logger.debug("router: configuration sent successfully, done.")
 });
 
 export const fetchRouter = router;

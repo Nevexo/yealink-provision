@@ -16,7 +16,7 @@ const nanoid = customAlphabet('1234567890abcdef', 8);
 import sitesRouter from './routes/sites.js';
 import modelsRouter from './routes/models.js';
 import deviceRouter from './routes/devices.js';
-// import {fetchRouter, fetchEmitter} from './routes/fetch.js';
+import {fetchRouter, fetchEmitter} from './routes/fetch.js';
 import configRouter from './routes/config.js';
 
 // Setup Winston logger
@@ -56,7 +56,7 @@ const main = async () => {
   app.use('/models', modelsRouter);
   app.use('/sites/:site/devices', deviceRouter);
   app.use('/:target_type/:target_id/config', configRouter)
-  // app.use('/fetch', fetchRouter);
+  app.use('/fetch', fetchRouter);
 
   // Capture events from fetchEmitter
   // fetchEmitter.on('audit_device_fetch', async (device, result) => {
