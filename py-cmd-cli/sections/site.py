@@ -55,7 +55,7 @@ def get_sites():
     sites = []
     for site in r.json():
       remark = site['remark'] if 'remark' in site else "N/A"
-      sites.append(Site(site['id'], site['name'], remark, site['create_date']), site['password'])
+      sites.append(Site(site['id'], site['name'], remark, site['create_date'], site['password']))
     return sites
   
   return None
