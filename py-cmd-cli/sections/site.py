@@ -3,6 +3,7 @@ from .api import api_url
 
 from .configEditor import ConfigCLI
 from .device import DeviceCLI
+from .virtual_device import VirtualDeviceCLI
 
 import cmd2
 import requests
@@ -38,7 +39,7 @@ class Site:
   
 def create_site(name, remark):
   # Create the site
-  r = requests.post(api_url + '/sites', json={'name': name, 'remark': remark, 'enable': true})
+  r = requests.post(api_url + '/sites', json={'name': name, 'remark': remark, 'enable': True})
 
   # Check if the request was successful
   if r.status_code == 200:
@@ -116,6 +117,10 @@ class SiteEditCLI(cmd2.Cmd):
     """List all devices in this site"""
     device = DeviceCLI(self.site)
     device.cmdloop()
+
+  def do_vdev(self, args):
+      """Jump to virtual device CLI"""
+      VirtualDeviceCLI(self.site).cmdloop()
 
   def do_enable(self, arg):
     """Enable the site"""
