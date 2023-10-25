@@ -11,9 +11,10 @@ export const virtualDeviceSchema = new Schema({
   id: { type: String, required: true },
   name: { type: String, required: true },
   site_id: { type: String, required: true },
+  model_id: { type: String, required: true },
   description: { type: String, required: false },
   create_date: { type: Date, required: true, default: Date.now },
   enable: { type: Boolean, required: true, default: false },
 });
 
-export const Device = mongoose.model('VirtualDevice', virtualDeviceSchema)
+export const VirtualDevice = mongoose.model('VirtualDevice', virtualDeviceSchema)

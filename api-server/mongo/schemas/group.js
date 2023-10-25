@@ -24,7 +24,7 @@ export const groupSchema = new Schema({
   remark: { type: String, required: false },
   create_date: { type: Date, required: true, default: Date.now },
   enable: { type: Boolean, required: true, default: true },
-  target_type: { type: String, required: true, enum: ['model', 'site', 'device', 'group'] },
+  target_type: { type: String, required: true, enum: ['model', 'site', 'device', 'group', 'virtual_device'] },
   target_id: { type: String, required: true },
 });
 
