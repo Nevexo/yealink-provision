@@ -18,6 +18,7 @@ import modelsRouter from './routes/models.js';
 import deviceRouter from './routes/devices.js';
 import {fetchRouter, fetchEmitter} from './routes/fetch.js';
 import configRouter from './routes/config.js';
+import virtualDeviceRouter from './routes/virtual_device.js';
 
 // Setup Winston logger
 const logger = winston.createLogger({
@@ -55,6 +56,7 @@ const main = async () => {
   app.use('/sites', sitesRouter);
   app.use('/models', modelsRouter);
   app.use('/sites/:site/devices', deviceRouter);
+  app.use('/sites/:site/virtual_devices', virtualDeviceRouter);
   app.use('/:target_type/:target_id/config', configRouter)
   app.use('/fetch', fetchRouter);
 
