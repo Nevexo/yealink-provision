@@ -1,5 +1,11 @@
 # Yealink-Provision To-Do List
 
+## Rework config API.
+
+- The config API needs to support returning the whole configuration for a site/model/group/virtual_device/device etc.
+- The config API must return the whole configuration on a call to /site/id/device/id/config
+- All downstream elements from any call should be returned.
+
 - Web based UI
 
 - Allow fetching configuration tree from any level.
